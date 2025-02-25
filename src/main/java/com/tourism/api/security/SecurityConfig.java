@@ -4,6 +4,7 @@ import com.tourism.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,11 +18,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CustomerService customerService;
+    @Autowired
     private final JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private final CustomerService customerService;
+
 
     @Autowired
-    public SecurityConfig(CustomerService customerService, JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(@Lazy CustomerService customerService, JwtRequestFilter jwtRequestFilter) {
         this.customerService = customerService;
         this.jwtRequestFilter = jwtRequestFilter;
     }
@@ -31,7 +35,12 @@ public class SecurityConfig {
                 .cors().disable()
                 .csrf().disable()
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/public/customer/signUp").permitAll()
+                        .requestMatchers("/api/public/customer/verify").permitAll()
+                        .requestMatchers("/api/public/customer/forgotPassword").permitAll()
+                        .requestMatchers("account/auth").permitAll()
+                        .requestMatchers("/api/public/**").authenticated()
+//                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/private/**").hasAnyAuthority("ADMIN","SUPERADMIN")
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

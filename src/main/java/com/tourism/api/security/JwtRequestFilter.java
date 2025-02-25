@@ -1,5 +1,6 @@
 package com.tourism.api.security;
 
+import com.tourism.service.CustomerService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,8 +20,12 @@ import java.util.stream.Collectors;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    @Autowired
+
     private JwtTokenUtils jwtTokenUtils;
+
+    private CustomerService customerService;
+
+
 
 
     @Override
@@ -40,7 +45,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
+            if (!customerService.findCustomerByEmail(username).get().getVerifyMail()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Customer email not verified");
+            }
             UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                     username,
                     null,
